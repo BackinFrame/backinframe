@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "backinframe"
-version = "0.1.0"
+version = "0.1.1"
 description = "Sends a forgotten photo or video to the people you choose now and then: web app, ntfy, e-mail, Telegram, Signal, Matrix or Discord."
 readme = "README.md"
 license = "MIT"

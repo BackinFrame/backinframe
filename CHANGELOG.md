@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.1 — 2026-11-19
+
+- The image now installs the latest Debian security updates at build time (among them zlib,
+  CVE-2026-85091).
+- README: launch video and a section on how Back in Frame was made.
+- CI: newer versions of the GitHub Actions; Trivy 0.76.2.
+
 ## 0.1.0 — 2026-11-15
 
 First release.

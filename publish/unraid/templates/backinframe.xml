@@ -13,6 +13,8 @@
     <WebPage>https://backinframe.com</WebPage>
   </Maintainer>
   <Changes>
+### 0.1.1 (2026-11-19)
+- Latest Debian security updates in the image; launch video in the README.
 ### 0.1.0 (2026-11-15)
 - First release: web app with push notifications, ntfy, e-mail, Telegram, Signal, Matrix and Discord.
 - Hearts on memories, a hearts overview and a year review in January.
