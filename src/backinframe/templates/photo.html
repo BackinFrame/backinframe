@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+{% set q = ('folder=' ~ (folder|urlencode) ~ '&' if folder is not none else '') ~ 'page=' ~ page %}
+<p><a href="/photos?{{ q }}">← {{ _('ui_photos_nav') }}</a></p>
+<h2>{{ _('ui_photo_h') }}</h2>
+<section class="card photo-edit">
+  <div class="photo-preview">
+    {% if m.kind == 'image' %}<img src="/thumb/{{ m.id }}" alt="">{% else %}<span class="vid" aria-hidden="true">▶</span>{% endif %}
+    <p class="muted">{{ m.path }}</p>
+  </div>
+  <div>
+    <h3>{{ _('ui_photo_preview') }}</h3>
+    <div class="notif-preview"><strong>{{ preview_title }}</strong><br>{% for line in preview_text.split('\n') %}{{ line }}{% if not loop.last %}<br>{% endif %}{% endfor %}</div>
+  </div>
+</section>
+<section class="card">
+  <form method="post" action="/photos/{{ m.id }}" class="photo-form">
+    {% if folder is not none %}<input type="hidden" name="folder" value="{{ folder }}">{% endif %}
+    <input type="hidden" name="page" value="{{ page }}">
+    <label>{{ _('ui_photo_title') }}
+      <input type="text" name="title" value="{{ m.title }}" maxlength="{{ title_max }}" placeholder="{{ album }}" aria-describedby="title-hint"></label>
+    <p class="muted" id="title-hint">{{ _('ui_photo_title_hint', album=album) }}</p>
+    <label>{{ _('ui_photo_date') }}
+      <input type="date" name="taken" value="{{ m.taken_at.strftime('%Y-%m-%d') if m.taken_at else '' }}" aria-describedby="date-hint"></label>
+    <p class="muted" id="date-hint">{% if m.date_edited %}{{ _('ui_photo_date_changed', date=original or '–') }}{% else %}{{ _('ui_photo_date_hint') }}{% endif %}</p>
+    {% if m.date_edited %}<label class="check"><input type="checkbox" name="reset_date" value="1"> {{ _('ui_photo_date_reset') }}</label>{% endif %}
+    <label>{{ _('ui_photo_sender') }}
+      <input type="text" name="sender" value="{{ m.sender }}" maxlength="60" aria-describedby="sender-hint"></label>
+    <p class="muted" id="sender-hint">{{ _('ui_photo_sender_hint') }}</p>
+    <label>{{ _('ui_photo_note') }}
+      <input type="text" name="note" value="{{ m.note }}" maxlength="{{ note_max }}" aria-describedby="note-hint"></label>
+    <p class="muted" id="note-hint">{{ _('ui_photo_note_hint') }}</p>
+    <p class="muted">{{ _('ui_photo_saved_hint') }}</p>
+    <button type="submit" class="primary">{{ _('ui_save') }}</button>
+  </form>
+</section>
+{% if m.path.startswith('@upload/') %}
+<section class="card">
+  <h3>{{ _('ui_photo_delete_h') }}</h3>
+  <p class="muted">{{ _('ui_photo_delete_hint') }}</p>
+  <form method="post" action="/photos/{{ m.id }}/delete" data-confirm="{{ _('ui_photo_delete_confirm') }}">
+    {% if folder is not none %}<input type="hidden" name="folder" value="{{ folder }}">{% endif %}
+    <input type="hidden" name="page" value="{{ page }}">
+    <button type="submit" class="danger">{{ _('ui_photo_delete') }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

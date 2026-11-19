@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_twofa_codes_h1') }}</h2>
+<section class="card">
+  <div class="flash ok" role="status">{{ _('ui_twofa_on_done') }}</div>
+  <p>{{ _('ui_twofa_codes_text') }}</p>
+  <ul translate="no" style="font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 17px; columns: 2; max-width: 360px; padding-left: 20px">
+    {% for c in codes %}<li>{{ c }}</li>{% endfor %}
+  </ul>
+  <p class="muted">{{ _('ui_twofa_reset_hint') }}</p>
+  <a class="btn" href="/security">{{ _('ui_twofa_codes_done') }}</a>
+</section>
+{% endblock %}

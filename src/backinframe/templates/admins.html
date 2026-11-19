@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_admins') }}</h2>
+{% if not auth.enabled %}
+<section class="card"><p>{{ _('ui_admins_no_password') }}</p></section>
+{% else %}
+{% if invite_link %}
+<section class="card" role="status">
+  <h3>{{ _('ui_admin_invite_ready', name=invite_name) }}</h3>
+  <p>{{ _('ui_admin_invite_send') }}</p>
+  <p><a href="{{ invite_link }}">{{ invite_link }}</a></p>
+  {% if invite_qr %}<div class="qr" role="img" aria-label="QR code">{{ invite_qr|safe }}</div>{# security: reviewed - SVG made by qrcode from our own link #}{% endif %}
+</section>
+{% endif %}
+<section class="card">
+  <p class="muted">{{ _('ui_admins_intro') }}</p>
+  <ul class="plain">
+    <li><strong>{{ _('ui_admin_main') }}</strong> <span class="muted">· {{ _('ui_admin_main_hint') }}</span></li>
+    {% for a in admins %}
+    <li><strong>{{ a.name }}</strong>
+      <span class="muted">· {% if a.active %}{{ _('ui_admin_added_by', who=a.created_by or _('ui_admin_main')|lower) }}{% else %}{{ _('ui_admin_pending') }}{% endif %}{% if a.id == me_id %} · {{ _('ui_admin_you') }}{% endif %}</span>
+      <form method="post" action="/admins/{{ a.id }}/remove" class="inline" data-confirm="{{ _('ui_admin_remove_confirm', name=a.name) }}">
+        <button type="submit" class="danger linklike">{{ _('ui_admin_remove') }}</button></form>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+<section class="card">
+  <h3>{{ _('ui_admin_invite_h') }}</h3>
+  <form method="post" action="/admins" class="photo-form">
+    <label>{{ _('ui_admin_name') }} <input type="text" name="name" required maxlength="60" aria-describedby="invite-hint"></label>
+    <p class="muted" id="invite-hint">{{ _('ui_admin_invite_hint') }}</p>
+    <button type="submit" class="primary">{{ _('ui_admin_invite_btn') }}</button>
+  </form>
+</section>
+{% endif %}
+{% endblock %}

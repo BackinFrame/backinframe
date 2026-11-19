@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_uploads') }}</h2>
+<section class="card">
+  <p class="muted">{{ _('ui_uploads_intro') }}</p>
+  {% if not can %}<p class="err-text">{{ _('ui_uploads_need_app') }}</p>{% else %}
+  <form method="post" action="/uploads" class="photo-form">
+    <label>{{ _('ui_uploads_album') }}
+      <input type="text" name="album" list="albums" required maxlength="80" aria-describedby="album-hint"></label>
+    <datalist id="albums">{% for a in albums %}<option value="{{ a }}">{% endfor %}</datalist>
+    <p class="muted" id="album-hint">{{ _('ui_uploads_album_hint') }}</p>
+    <label>{{ _('ui_uploads_name') }}
+      <input type="text" name="name" required maxlength="60" aria-describedby="name-hint"></label>
+    <p class="muted" id="name-hint">{{ _('ui_uploads_name_hint') }}</p>
+    <button type="submit" class="primary">{{ _('ui_uploads_make') }}</button>
+  </form>
+  {% endif %}
+</section>
+{% for l in links %}
+<section class="card">
+  <h3>{{ l.name }} → {{ l.album }}</h3>
+  {% if l.url %}
+  <p><a href="{{ l.url }}">{{ l.url }}</a></p>
+  <div class="qr" role="img" aria-label="QR code">{{ l.qr|safe }}</div>{# security: reviewed - SVG made by qrcode from our own link #}
+  {% endif %}
+  <p class="muted">{{ _('ui_uploads_count', n=l.files) }}</p>
+  <form method="post" action="/uploads/{{ l.id }}/revoke" data-confirm="{{ _('ui_uploads_revoke_confirm') }}">
+    <button type="submit" class="danger">{{ _('ui_uploads_revoke') }}</button>
+  </form>
+</section>
+{% else %}
+{% if can %}<section class="card"><p class="muted">{{ _('ui_uploads_none') }}</p></section>{% endif %}
+{% endfor %}
+{% endblock %}

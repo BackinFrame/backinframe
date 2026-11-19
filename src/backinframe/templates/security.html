@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_security') }}</h2>
+{% if not auth.enabled %}
+<section class="card"><p>{{ _('ui_security_no_password') }}</p></section>
+{% else %}
+<section class="card" id="twofa">
+  <h3>{{ _('ui_twofa_h2') }}</h3>
+  {% if totp_on %}
+  <p>{{ _('ui_twofa_on_text', date=fmt(totp_since), n=recovery_left) }}</p>
+  <p class="muted">{{ _('ui_twofa_disable_text') }}</p>
+  <form method="post" action="/security/2fa/disable">
+    <label>{{ _('ui_password') }} <input type="password" name="password" required autocomplete="current-password"></label>
+    <label>{{ _('ui_twofa_code') }} <input type="text" name="code" required autocomplete="one-time-code" autocapitalize="off" maxlength="20"></label>
+    <button type="submit">{{ _('ui_twofa_disable_btn') }}</button>
+  </form>
+  {% else %}
+  <p>{{ _('ui_twofa_off_text') }}</p>
+  <a class="btn" href="/security/2fa">{{ _('ui_twofa_enable_btn') }}</a>
+  {% endif %}
+</section>
+{% if me_id %}
+<section class="card">
+  <h3>{{ _('ui_admin_password_h') }}</h3>
+  <p class="muted">{{ _('ui_admin_logged_in_as', name=me_name) }}</p>
+  <form method="post" action="/security/password">
+    <label>{{ _('ui_admin_password_current') }} <input type="password" name="current" required autocomplete="current-password"></label>
+    <label>{{ _('ui_admin_password_new') }} <input type="password" name="new" required minlength="10" maxlength="128" autocomplete="new-password"></label>
+    <button type="submit">{{ _('ui_admin_password_btn') }}</button>
+  </form>
+</section>
+{% endif %}
+<section class="card">
+  <h3>{{ _('ui_sessions_h2') }}</h3>
+  <p class="muted">{{ _('ui_sessions_text') }}</p>
+  <form method="post" action="/security/logout-all"><button type="submit">{{ _('ui_logout_all') }}</button></form>
+</section>
+{% endif %}
+{% endblock %}

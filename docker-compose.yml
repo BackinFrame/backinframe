@@ -1,0 +1,53 @@
+# Back in Frame — the easy way: no open ports needed to get started.
+#
+#   1. Put photos/videos in ./photos (one subfolder per trip is nice, not required)
+#   2. docker compose up -d
+#   3. Open http://<this-machine>:8080, add a recipient
+#
+# Recipients get memories in one of two ways:
+#   - the Back in Frame web app (recommended): set BACKINFRAME_APP_URL to the https address
+#     your reverse proxy or tunnel gives port 8081. Only that port faces the internet.
+#   - the free ntfy app, through the public ntfy.sh server: works without any open port.
+# Want your own ntfy server? See docker-compose.own-ntfy.yml.
+
+services:
+  backinframe:
+    image: ghcr.io/backinframe/backinframe:latest
+    build: .
+    container_name: backinframe
+    restart: unless-stopped
+    ports:
+      - "8080:8080"                # admin page: keep this on your own network
+      - "8081:8081"                # recipient web app: this one goes behind your reverse proxy
+    read_only: true                # the container only writes to /data and a temporary /tmp
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./photos:/media:ro         # your photo/video folder, read-only
+      - ./data:/data               # database and push key (keep this!)
+    environment:
+      TZ: Europe/Amsterdam
+      BACKINFRAME_LANGUAGE: en       # en nl de fr es it pt pl ru zh ja
+      # More channels, each optional (see docs/admin-guide.md, section 5):
+      # BACKINFRAME_SMTP_HOST: smtp.example.org
+      # BACKINFRAME_SMTP_FROM: "Back in Frame <photos@example.org>"
+      # BACKINFRAME_SMTP_USER: photos@example.org
+      # BACKINFRAME_SMTP_PASSWORD: "…"
+      # BACKINFRAME_TELEGRAM_BOT_TOKEN: "123456:ABC…"
+      # BACKINFRAME_SIGNAL_URL: http://signal:8080
+      # BACKINFRAME_SIGNAL_NUMBER: "+31612345678"
+      # BACKINFRAME_MATRIX_HOMESERVER: https://matrix.example.org
+      # BACKINFRAME_MATRIX_TOKEN: "syt_…"
+      # Photos from Immich and Nextcloud (see docs/admin-guide.md, section 7):
+      # BACKINFRAME_IMMICH_URL: http://immich-server:2283
+      # BACKINFRAME_IMMICH_API_KEY: "…"                   # album.read, asset.read, asset.view, asset.download
+      # BACKINFRAME_IMMICH_ALBUMS: "Chile 2025, Rome 2019"  # empty = every album
+      # BACKINFRAME_NEXTCLOUD_URL: https://cloud.example.org
+      # BACKINFRAME_NEXTCLOUD_USER: anna
+      # BACKINFRAME_NEXTCLOUD_PASSWORD: "…"               # an app password
+      # BACKINFRAME_NEXTCLOUD_FOLDER: Photos/Back in Frame
+      # BACKINFRAME_APP_URL: https://memories.example.com   # turns the web app on
+      # BACKINFRAME_ADMIN_PASSWORD: choose-a-password       # protects the admin page
+      # BACKINFRAME_SEND_VIDEOS: "false"
+    # user: "99:100"               # Unraid: nobody:users

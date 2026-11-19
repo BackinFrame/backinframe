@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card" style="max-width:460px">
+  <h2>{{ _('ui_twofa_login_h1') }}</h2>
+  {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+  <p>{{ _('ui_twofa_login_text') }}</p>
+  <form method="post" action="/login/2fa">
+    <input type="hidden" name="next" value="{{ next }}">
+    <label>{{ _('ui_twofa_code') }} <input type="text" name="code" required autocomplete="one-time-code" autocapitalize="off" spellcheck="false" maxlength="20" autofocus></label>
+    <button class="primary" type="submit">{{ _('ui_login_btn') }}</button>
+  </form>
+  <p><a href="/login">{{ _('ui_back') }}</a></p>
+</section>
+{% endblock %}

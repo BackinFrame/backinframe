@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>{{ review.title }}</title>
+<link rel="icon" href="{{ base }}/icon.png">
+<style>
+  :root { --bg:#faf7f2; --card:#fff; --ink:#2b2622; --muted:#6b6058; --accent:#b04520; --line:#ece4da; --focus:#3b6fd9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1d1a17; --card:#27231f; --ink:#f1ebe4; --muted:#b3a89d; --line:#3a342e; --accent:#f0956b; --focus:#8fb0f2; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width: 760px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 48px; }
+  h1 { font-size: 26px; margin: 8px 0 4px; letter-spacing: -0.3px; }
+  .muted { color: var(--muted); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  .gallery { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-top: 16px; }
+  figure { margin:0; background: var(--card); border:1px solid var(--line); border-radius: 12px; overflow:hidden; }
+  figure img, figure video { display:block; width:100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--line); }
+  figcaption { padding: 8px 10px; font-size: 13px; }
+  figcaption strong { display:block; font-size: 14px; }
+  .loved { color: #d1344b; }
+</style>
+</head>
+<body>
+<main>
+  <p><a href="{{ base }}/">{{ _('review_back') }}</a></p>
+  <h1>{{ review.title }}</h1>
+  <p class="muted">{{ review.text }}</p>
+  <div class="gallery">
+    {% for it in review['items'] %}
+    <figure>
+      {% if it.kind == 'image' %}
+      <a href="{{ base }}/media/{{ it.send_id }}"><img src="{{ base }}/media/{{ it.send_id }}" alt="{{ it.title }}" loading="lazy"></a>
+      {% else %}
+      <video src="{{ base }}/media/{{ it.send_id }}" controls playsinline preload="none"></video>
+      {% endif %}
+      <figcaption><strong>{{ it.title }}{% if it.reaction == 'heart' %} <span class="loved" aria-label="{{ _('review_loved') }}">♥</span>{% endif %}</strong>{{ it.text }}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card" style="max-width:460px">
+  {% if gone %}
+  <h2>{{ _('ui_admin_invite_gone_h') }}</h2>
+  <p>{{ _('ui_admin_invite_gone') }}</p>
+  {% else %}
+  <h2>{{ _('ui_admin_invite_welcome', name=invitee) }}</h2>
+  <p class="muted">{{ _('ui_admin_invite_text', n=min) }}</p>
+  {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+  <form method="post" action="/invite/{{ token }}">
+    <input type="text" name="username" value="{{ invitee }}" autocomplete="username" hidden>
+    <label>{{ _('ui_admin_password_new') }} <input type="password" name="password" required minlength="{{ min }}" maxlength="128" autocomplete="new-password" autofocus></label>
+    <label>{{ _('ui_admin_password_again') }} <input type="password" name="again" required minlength="{{ min }}" maxlength="128" autocomplete="new-password"></label>
+    <button class="primary" type="submit">{{ _('ui_admin_invite_accept') }}</button>
+  </form>
+  {% endif %}
+</section>
+{% endblock %}

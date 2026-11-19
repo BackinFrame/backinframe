@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_review_h', year=year) }}</h2>
+<section class="card">
+  <p>{{ _('ui_review_explain', min=min_memories) }}</p>
+  <p><a href="/review?year={{ year - 1 }}">← {{ year - 1 }}</a>{% if year < svc.now().year %} · <a href="/review?year={{ year + 1 }}">{{ year + 1 }} →</a>{% endif %}</p>
+</section>
+{% for row in rows %}
+<section class="card">
+  <h3>{{ row.r.name }}</h3>
+  {% if not row.review %}
+  <p class="muted">{{ _('ui_review_too_little') }}</p>
+  {% else %}
+  <p><strong>{{ row.text[0] }}</strong><br>{{ row.text[1] }}</p>
+  <div class="thumbs">
+    {% for p in row.review.picks %}
+    <figure>
+      {% if p.kind == 'image' %}<img src="/thumb/{{ p.media_id }}" alt="{{ p.album }}" loading="lazy">{% else %}<div class="vid" role="img" aria-label="{{ _('ui_video') }}">▶</div>{% endif %}
+      <figcaption>{% if p.reaction == 'heart' %}♥ {% endif %}{{ p.album }}</figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  <p class="muted">{% if row.sent %}{{ _('ui_review_was_sent', date=fmt(row.sent)) }}{% elif not row.r.year_review %}{{ _('ui_review_opted_out') }}{% endif %}</p>
+  <form method="post" action="/recipients/{{ row.r.id }}/review"><input type="hidden" name="year" value="{{ year }}">
+    <button type="submit">{{ _('ui_review_send') }}</button></form>
+  {% endif %}
+</section>
+{% endfor %}
+{% endblock %}

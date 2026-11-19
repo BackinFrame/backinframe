@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<Maintainer>
+  <Profile>Back in Frame sends a photo or video from your own folder, Immich or Nextcloud to the people you choose now and then, so the photos you took get seen again. Self-hosted, open source (MIT), no tracking and no AI. Made by Pinktank in the Netherlands.</Profile>
+  <Icon>https://raw.githubusercontent.com/backinframe/unraid-templates/main/icon.png</Icon>
+  <WebPage>https://backinframe.com</WebPage>
+  <Forum>https://forums.unraid.net/topic/SUPPORT-THREAD-BACKINFRAME/</Forum>
+</Maintainer>

@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block content %}
+<p><a href="/">← {{ _('ui_back') }}</a></p>
+
+<section class="card">
+  <h2>{{ r.name }} <span class="muted">· {{ freq }}</span></h2>
+  <p class="muted">
+    {% if not r.enabled %}{{ _('ui_disabled') }}
+    {% elif r.paused_until and r.paused_until > svc.now() %}{{ _('ui_paused_until') }} {{ fmt(r.paused_until) }}
+    {% else %}{{ _('ui_next') }}: {{ fmt(r.next_send_at) }}{% endif %}
+  </p>
+  <div class="row">
+    <form class="inline" method="post" action="/recipients/{{ r.id }}/send"><button class="primary" type="submit">{{ _('ui_send_now') }}</button></form>
+    {% if r.paused_until and r.paused_until > svc.now() %}
+    <form class="inline" method="post" action="/recipients/{{ r.id }}/command/resume"><button type="submit">{{ _('ui_resume') }}</button></form>
+    {% else %}
+    <form class="inline" method="post" action="/recipients/{{ r.id }}/command/pause"><button type="submit">{{ _('ui_pause') }}</button></form>
+    {% endif %}
+  </div>
+</section>
+
+{% if r.delivery == 'app' %}
+<section class="card">
+  <h2>{{ _('ui_delivery_app') }}</h2>
+  <p>{{ _('ui_app_link') }}</p>
+  <p><code id="app-link">{{ app_link }}</code></p>
+  <div class="qr" role="img" aria-label="QR code">{{ app_qr|safe }}</div>{# security: reviewed - SVG made by qrcode from our own link #}
+  <p class="muted">{{ _('ui_devices', n=devices) }}</p>
+</section>
+{% elif channel %}
+<section class="card">
+  <h2>{{ _('ui_delivery_' + r.delivery) }}</h2>
+  <p>{{ _('ui_help_' + r.delivery, bot=channel_info.get('bot', _('ui_your_bot')), user=channel_info.get('user', '–'), number=channel_info.get('number', '–')) }}</p>
+  <p>{{ _('ui_address') }}: <code id="address">{{ r.address }}</code></p>
+  {% if channel.buttons %}<p class="muted">{{ _('ui_has_buttons') }}</p>
+  {% elif channel.replies %}<p class="muted">{{ _('ui_has_replies') }}</p>
+  {% else %}<p class="muted">{{ _('ui_no_buttons') }}</p>{% endif %}
+</section>
+{% elif r.delivery != 'ntfy' %}
+<section class="card"><p class="flash err">{{ _('ui_channel_off', channel=_('ui_delivery_' + r.delivery)) }}</p></section>
+{% else %}
+<section class="card">
+  <h2>{{ _('ui_subscribe') }}</h2>
+  <ol>
+    <li>{{ _('ui_step1') }}</li>
+    <li>{{ _('ui_step2') }}
+      <p><strong>{{ _('ui_android') }}</strong></p>
+      <div class="qr" role="img" aria-label="QR-code (Android)">{{ qr|safe }}</div>{# security: reviewed - SVG made by qrcode from our own link #}
+      <p><strong>{{ _('ui_iphone') }}</strong><br>
+         {{ _('ui_server') }}: <code>{{ server }}</code><br>
+         {{ _('ui_topic') }}: <code id="topic">{{ r.topic }}</code></p>
+      <p class="muted">{{ _('ui_ios_note') }}</p>
+    </li>
+    <li>{{ _('ui_step3') }}</li>
+  </ol>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>{{ _('ui_settings') }}</h2>
+  <form method="post" action="/recipients/{{ r.id }}">
+    <label>{{ _('ui_name') }} <input type="text" name="name" value="{{ r.name }}" required maxlength="80"></label>
+    <label>{{ _('ui_per_day') }} <input type="number" name="per_day" min="1" max="24" value="{{ r.per_day }}"></label>
+    <label>{{ _('ui_every_days') }} <input type="number" name="every_days" min="1" max="60" value="{{ r.every_days }}"></label>
+    <label>{{ _('ui_window') }} <input type="time" name="window_start" value="{{ r.window_start }}">
+      {{ _('ui_and') }} <input type="time" name="window_end" value="{{ r.window_end }}"></label>
+    <label>{{ _('ui_min_gap') }} <input type="number" name="min_gap_minutes" min="0" max="1440" value="{{ r.min_gap_minutes }}"></label>
+    <label><input type="checkbox" name="enabled" value="1" {% if r.enabled %}checked{% endif %}> {{ _('ui_enabled') }}</label>
+    {% if svc.settings.year_review_enabled %}<label><input type="checkbox" name="year_review" value="1" {% if r.year_review %}checked{% endif %}> {{ _('ui_year_review_on') }}</label>{% endif %}
+    <label>{{ _('ui_delivery') }}
+      <select name="delivery">
+        {% for d in deliveries %}<option value="{{ d }}" {% if r.delivery == d %}selected{% endif %}>{{ _('ui_delivery_' + d) }}</option>{% endfor %}
+        {% if r.delivery not in deliveries %}<option value="{{ r.delivery }}" selected>{{ _('ui_delivery_' + r.delivery) }}</option>{% endif %}
+      </select>
+    </label>
+    <label>{{ _('ui_address') }} <input type="text" name="address" value="{{ r.address }}" maxlength="300" autocomplete="off">
+      <span class="muted">{{ _('ui_address_note') }}</span></label>
+    {% if not app_enabled %}<p class="muted">{{ _('ui_app_off') }}</p>{% endif %}
+    <label>{{ _('ui_language') }}
+      <select name="language">
+        <option value="" {% if not r.language %}selected{% endif %}>{{ _('ui_language_default', name=languages[lang]) }}</option>
+        {% for code, native in languages.items() %}<option value="{{ code }}" lang="{{ code }}" {% if r.language == code %}selected{% endif %}>{{ native }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="primary" type="submit">{{ _('ui_save') }}</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>{{ _('ui_history') }}</h2>
+  {% if history %}
+  <ul class="list">
+    {% for s in history %}
+    <li><span>{{ s.path or '–' }}</span><span class="muted">{{ s.sent_at[:16].replace('T', ' ') }} · {{ s.status }}</span></li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="muted">–</p>{% endif %}
+</section>
+
+<form method="post" action="/recipients/{{ r.id }}/delete" data-confirm="{{ _('ui_delete_confirm') }}">
+  <button class="danger" type="submit">{{ _('ui_delete') }}</button>
+</form>
+{% endblock %}

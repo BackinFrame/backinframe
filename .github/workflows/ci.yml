@@ -1,0 +1,133 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+env:
+  NTFY_VERSION: "2.14.0"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: System packages
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: ntfy server binary (for end-to-end tests)
+        run: |
+          curl -sSL -o /tmp/ntfy.tgz \
+            "https://github.com/binwiederhier/ntfy/releases/download/v${NTFY_VERSION}/ntfy_${NTFY_VERSION}_linux_amd64.tar.gz"
+          tar -xzf /tmp/ntfy.tgz -C /tmp
+          echo "NTFY_BIN=/tmp/ntfy_${NTFY_VERSION}_linux_amd64/ntfy" >> "$GITHUB_ENV"
+      - run: pip install -e ".[test,security]" ruff
+      - run: ruff check --select F,E,W,B,I --line-length 120 src tests
+      - run: pytest -q -rs
+
+  security:
+    # Fails the build on a known vulnerability in a dependency or a new static-analysis finding.
+    # The security tests themselves (pytest -m security) also run in the test job above.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e ".[test,security]"
+      - name: Dependencies against known vulnerabilities (pip-audit, OSV/PyPI advisories)
+        run: pip-audit --skip-editable --progress-spinner off
+      - name: Static analysis (bandit)
+        run: bandit -q -c pyproject.toml -r src
+      - name: Secrets in the git history (gitleaks)
+        run: docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.24.0 git /repo --redact --no-banner
+      - name: Security tests
+        run: pytest -q -m security
+
+
+  zap:
+    # OWASP ZAP baseline scan (passive: spider plus header/cookie/error checks) against the
+    # running container. Rules marked FAIL in .zap/rules.tsv break the build; warnings are in the
+    # report, which is kept as a build artifact.
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Back in Frame
+        run: |
+          docker build -t backinframe:zap .
+          mkdir -p /tmp/photos /tmp/data && chmod 777 /tmp/data
+          docker run -d --name lm --network host -v /tmp/photos:/media:ro -v /tmp/data:/data \
+            --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+            -e BACKINFRAME_NTFY_URL=https://ntfy.sh -e BACKINFRAME_ADMIN_PASSWORD=zap-scan-password \
+            -e BACKINFRAME_APP_URL=http://localhost:8081 backinframe:zap
+          for i in $(seq 1 30); do curl -fs localhost:8080/healthz && exit 0; sleep 1; done
+          docker logs lm; exit 1
+      - name: ZAP baseline, admin page and web app
+        run: |
+          mkdir -p zap && chmod 777 zap
+          for target in http://localhost:8080 http://localhost:8081; do
+            name=$(echo "$target" | tr -dc '0-9')
+            docker run --rm --network host -v "$PWD/.zap:/zap/wrk/conf:ro" -v "$PWD/zap:/zap/wrk/out" \
+              ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t "$target" -c conf/rules.tsv -I \
+              -r "out/zap-$name.html" -J "out/zap-$name.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-report
+          path: zap/
+
+  docker:
+    needs: [test, security, zap]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
+          tags: ${{ steps.meta.outputs.tags }}
+      - name: Smoke test the image
+        run: |
+          docker build -t backinframe:test .
+          mkdir -p /tmp/photos /tmp/data && chmod 777 /tmp/data
+          docker run -d --name lm -p 8080:8080 -v /tmp/photos:/media:ro -v /tmp/data:/data \
+            --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
+            -e BACKINFRAME_NTFY_URL=https://ntfy.sh backinframe:test
+          for i in $(seq 1 30); do curl -fs localhost:8080/healthz && exit 0; sleep 1; done
+          docker logs lm; exit 1
+      - name: Scan the image (Trivy)
+        # The Trivy image at a fixed version, not trivy-action: its tags were rewritten in the
+        # March 2026 supply-chain incident (CVE-2026-33634). Pin by digest when you publish.
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.72.0 \
+            image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test

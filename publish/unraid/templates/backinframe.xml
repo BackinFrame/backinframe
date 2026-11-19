@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>backinframe</Name>
+  <Repository>ghcr.io/backinframe/backinframe:latest</Repository>
+  <Registry>https://github.com/backinframe/backinframe/pkgs/container/backinframe</Registry>
+  <Network>bridge</Network>
+  <Privileged>false</Privileged>
+  <Support>https://forums.unraid.net/topic/SUPPORT-THREAD-BACKINFRAME/</Support>
+  <Project>https://github.com/backinframe/backinframe</Project>
+  <ReadMe>https://github.com/backinframe/backinframe/blob/main/docs/admin-guide.md#3-install-on-unraid</ReadMe>
+  <TemplateURL>https://raw.githubusercontent.com/backinframe/unraid-templates/main/templates/backinframe.xml</TemplateURL>
+  <Maintainer>
+    <WebPage>https://backinframe.com</WebPage>
+  </Maintainer>
+  <Changes>
+### 0.1.0 (2026-11-15)
+- First release: web app with push notifications, ntfy, e-mail, Telegram, Signal, Matrix and Discord.
+- Hearts on memories, a hearts overview and a year review in January.
+- Photos from Immich and Nextcloud, optional two-step verification on the admin page.
+  </Changes>
+  <Overview>Back in Frame sends a photo or video from a folder of your choice to your phone now and then, as a notification - so the photos you took get seen again. Recipients use the Back in Frame web app (needs an https address, e.g. via your reverse proxy) or the free ntfy app. Photos from "this day, years ago" get priority; each recipient chooses their own rhythm and can tap More / Less / Pause under every photo. Works through the public ntfy.sh without open ports, or with your own ntfy server for full privacy. Mount your photo share read-only on /media.</Overview>
+  <Category>MediaApp:Photos Tools:Utilities</Category>
+  <WebUI>http://[IP]:[PORT:8080]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/backinframe/unraid-templates/main/icon.png</Icon>
+  <ExtraParams>--user 99:100</ExtraParams>
+  <Config Name="Admin page" Target="8080" Default="8080" Mode="tcp" Description="Web page to add recipients and change settings." Type="Port" Display="always" Required="true" Mask="false">8080</Config>
+  <Config Name="Web app" Target="8081" Default="8081" Mode="tcp" Description="Recipient web app. Only this port goes behind your reverse proxy; the admin page stays at home." Type="Port" Display="always" Required="false" Mask="false">8081</Config>
+  <Config Name="Web app address" Target="BACKINFRAME_APP_URL" Default="" Mode="" Description="The https address of the web app, e.g. https://memories.example.com. Empty = ntfy only." Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Photos" Target="/media" Default="/mnt/user/photos/backinframe" Mode="ro" Description="Folder with the photos and videos to send (read-only). Subfolders per trip become the notification title." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/photos/backinframe</Config>
+  <Config Name="Data" Target="/data" Default="/mnt/user/appdata/backinframe" Mode="rw" Description="Database. Keep this: it holds the recipients and their topics." Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/backinframe</Config>
+  <Config Name="Time zone" Target="TZ" Default="Europe/Amsterdam" Mode="" Description="Time zone for the time windows." Type="Variable" Display="always" Required="true" Mask="false">Europe/Amsterdam</Config>
+  <Config Name="Language" Target="BACKINFRAME_LANGUAGE" Default="en|nl|de|fr|es|it|pt|pl|ru|zh|ja" Mode="" Description="Language of the admin page, and of recipients who have no language of their own." Type="Variable" Display="always" Required="false" Mask="false">en</Config>
+  <Config Name="Admin password" Target="BACKINFRAME_ADMIN_PASSWORD" Default="" Mode="" Description="Optional password for the admin page. With it you can turn on two-step verification under Security." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="ntfy server" Target="BACKINFRAME_NTFY_URL" Default="https://ntfy.sh" Mode="" Description="ntfy server to publish to. Keep https://ntfy.sh for the easy setup." Type="Variable" Display="advanced" Required="false" Mask="false">https://ntfy.sh</Config>
+  <Config Name="ntfy public URL" Target="BACKINFRAME_NTFY_PUBLIC_URL" Default="" Mode="" Description="Only for your own ntfy server: the HTTPS address phones use to reach it." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="ntfy token" Target="BACKINFRAME_NTFY_TOKEN" Default="" Mode="" Description="Access token if your ntfy server requires login." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Send videos" Target="BACKINFRAME_SEND_VIDEOS" Default="true|false" Mode="" Description="Also send videos." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+  <Config Name="Max video size (MB)" Target="BACKINFRAME_VIDEO_MAX_MB" Default="50" Mode="" Description="Upper limit for videos; the ntfy server limit also applies." Type="Variable" Display="advanced" Required="false" Mask="false">50</Config>
+  <Config Name="SMTP server (e-mail channel)" Target="BACKINFRAME_SMTP_HOST" Default="" Mode="" Description="Turns on photos by e-mail. Also set the sender." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="SMTP port" Target="BACKINFRAME_SMTP_PORT" Default="587" Mode="" Description="587 with starttls, 465 with ssl." Type="Variable" Display="advanced" Required="false" Mask="false">587</Config>
+  <Config Name="SMTP security" Target="BACKINFRAME_SMTP_SECURITY" Default="starttls|ssl|none" Mode="" Description="" Type="Variable" Display="advanced" Required="false" Mask="false">starttls</Config>
+  <Config Name="SMTP user" Target="BACKINFRAME_SMTP_USER" Default="" Mode="" Description="" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="SMTP password" Target="BACKINFRAME_SMTP_PASSWORD" Default="" Mode="" Description="" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="E-mail sender" Target="BACKINFRAME_SMTP_FROM" Default="" Mode="" Description="e.g. Back in Frame &lt;photos@example.org&gt;" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Telegram bot token" Target="BACKINFRAME_TELEGRAM_BOT_TOKEN" Default="" Mode="" Description="From @BotFather. Turns on Telegram." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Signal API URL" Target="BACKINFRAME_SIGNAL_URL" Default="" Mode="" Description="signal-cli-rest-api, e.g. http://192.168.1.10:8095. Turns on Signal." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Signal number" Target="BACKINFRAME_SIGNAL_NUMBER" Default="" Mode="" Description="The number registered in signal-cli, +31…" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Matrix homeserver" Target="BACKINFRAME_MATRIX_HOMESERVER" Default="" Mode="" Description="e.g. https://matrix.example.org. Turns on Matrix." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Matrix access token" Target="BACKINFRAME_MATRIX_TOKEN" Default="" Mode="" Description="Of the bot account." Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Immich URL" Target="BACKINFRAME_IMMICH_URL" Default="" Mode="" Description="e.g. http://192.168.1.10:2283. Takes albums from Immich (admin guide, section 7)." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Immich API key" Target="BACKINFRAME_IMMICH_API_KEY" Default="" Mode="" Description="Permissions: album.read, asset.read, asset.view, asset.download" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Immich albums" Target="BACKINFRAME_IMMICH_ALBUMS" Default="" Mode="" Description="Album names, comma-separated. Empty = every album." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Nextcloud URL" Target="BACKINFRAME_NEXTCLOUD_URL" Default="" Mode="" Description="e.g. https://cloud.example.org. Takes a folder from Nextcloud." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Nextcloud user" Target="BACKINFRAME_NEXTCLOUD_USER" Default="" Mode="" Description="Nextcloud user name" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Nextcloud app password" Target="BACKINFRAME_NEXTCLOUD_PASSWORD" Default="" Mode="" Description="An app password, not your login password" Type="Variable" Display="advanced" Required="false" Mask="true"></Config>
+  <Config Name="Nextcloud folder" Target="BACKINFRAME_NEXTCLOUD_FOLDER" Default="" Mode="" Description="e.g. Photos/Back in Frame" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Hearts" Target="BACKINFRAME_REACTIONS" Default="true|false" Mode="" Description="Recipients in the web app can put a heart on a photo; you see which ones on the Hearts page." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+  <Config Name="Year review" Target="BACKINFRAME_YEAR_REVIEW" Default="true|false" Mode="" Description="In the first two weeks of January every recipient gets one review of the past year." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+  <Config Name="Discord" Target="BACKINFRAME_DISCORD_ENABLED" Default="true|false" Mode="" Description="Offer Discord webhooks as a delivery." Type="Variable" Display="advanced" Required="false" Mask="false">true</Config>
+</Container>

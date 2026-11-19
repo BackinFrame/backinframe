@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card">
+  <h2>{{ _('ui_collection') }}</h2>
+  <div class="row">
+    <span><strong>{{ counts.image }}</strong> {{ _('ui_photos') }} · <strong>{{ counts.video }}</strong> {{ _('ui_videos') }}</span>
+    <span class="muted">{{ _('ui_last_scan') }}: {{ last_scan }}</span>
+    <form class="inline" method="post" action="/rescan"><button type="submit">{{ _('ui_rescan') }}</button></form>
+  </div>
+  {% if sources %}
+  <h3>{{ _('ui_sources') }}</h3>
+  <ul class="list">
+    {% for name, st in sources.items() %}
+    <li>
+      <span><strong>{{ _('ui_source_' + name) }}</strong>
+        <span class="muted">· {% if name == 'immich' %}{{ _('ui_source_albums') }}: {{ st.albums if st.albums and st.albums != '*' else _('ui_source_all') }}{% else %}{{ _('ui_source_folder') }}: {{ st.folder or '' }}{% endif %}</span></span>
+      <span class="muted">
+        {% if not st %}{{ _('ui_source_never') }}
+        {% elif st.ok %}{{ st.at[:16].replace('T', ' ') }} · {{ _('ui_source_counts', new=st.downloaded, kept=st.kept, removed=st.removed) }}
+        {% else %}<span class="err-text">{{ st.at[:16].replace('T', ' ') }} · {{ st.error or _('ui_source_failed', n=st.failed) }}</span>{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  <form method="post" action="/sources/sync"><button type="submit">{{ _('ui_sync_now') }}</button></form>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ _('ui_recipients') }}</h2>
+  {% if recipients %}
+  <ul class="list">
+    {% for r in recipients %}
+    <li>
+      <span><a href="/recipients/{{ r.id }}">{{ r.name }}</a>
+        <span class="muted">· {{ svc.frequency_text(r, lang) }} · {{ _('ui_delivery_' + r.delivery) }}</span></span>
+      <span class="muted">
+        {% if not r.enabled %}{{ _('ui_disabled') }}
+        {% elif r.paused_until and r.paused_until > svc.now() %}{{ _('ui_paused_until') }} {{ fmt(r.paused_until) }}
+        {% else %}{{ _('ui_next') }}: {{ fmt(r.next_send_at) }}{% endif %}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">{{ _('ui_none') }}</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>{{ _('ui_new_recipient') }}</h2>
+  <form method="post" action="/recipients">
+    <label>{{ _('ui_name') }} <input type="text" name="name" required maxlength="80"></label>
+    <label>{{ _('ui_delivery') }}
+      <select name="delivery">
+        {% for d in deliveries %}<option value="{{ d }}">{{ _('ui_delivery_' + d) }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>{{ _('ui_address') }} <input type="text" name="address" maxlength="300" autocomplete="off">
+      <span class="muted">{{ _('ui_address_note') }}</span></label>
+    <label>{{ _('ui_language') }}
+      <select name="language">
+        <option value="">{{ _('ui_language_default', name=languages[lang]) }}</option>
+        {% for code, native in languages.items() %}<option value="{{ code }}" lang="{{ code }}">{{ native }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="primary" type="submit">{{ _('ui_add') }}</button>
+  </form>
+</section>
+{% endblock %}

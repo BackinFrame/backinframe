@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_photos_nav') }}</h2>
+<section class="card">
+  <p class="muted">{{ _('ui_photos_intro') }}</p>
+  <form method="get" action="/photos" class="row">
+    <label>{{ _('ui_photos_album') }}
+      <select name="folder">
+        <option value="" {% if folder is none %}selected{% endif %} data-all>{{ _('ui_photos_all') }}</option>
+        {% for f, n in folders %}<option value="{{ f }}" {% if folder == f %}selected{% endif %}>{{ folder_label(f) if f else _('ui_photos_top') }} ({{ n }})</option>{% endfor %}
+      </select></label>
+    <button type="submit">{{ _('ui_photos_show') }}</button>
+  </form>
+  {% if folder is not none %}
+  <form method="post" action="/albums/sender" class="row">
+    <input type="hidden" name="folder" value="{{ folder }}">
+    <label>{{ _('ui_album_sender') }}
+      <input type="text" name="sender" value="{{ folder_sender }}" maxlength="60" aria-describedby="sender-hint"></label>
+    <button type="submit">{{ _('ui_save') }}</button>
+  </form>
+  <p class="muted" id="sender-hint">{{ _('ui_album_sender_hint') }}</p>
+  {% endif %}
+</section>
+<section class="card">
+  {% if items %}
+  <ul class="thumbs" role="list">
+    {% for m in items %}
+    {% set q = ('folder=' ~ (folder|urlencode) ~ '&' if folder is not none else '') ~ 'page=' ~ page %}
+    <li><a href="/photos/{{ m.id }}?{{ q }}" class="thumblink">
+      {% if m.kind == 'image' %}<img src="/thumb/{{ m.id }}" alt="" loading="lazy">{% else %}<span class="vid" aria-hidden="true">▶</span>{% endif %}
+      <span class="cap"><strong>{{ m.title or album_name(m) }}</strong>{% if m.title or m.note or m.date_edited %} <span class="edited">· {{ _('ui_photos_edited') }}</span>{% endif %}<br>
+      <span class="muted">{{ m.taken_at.strftime('%Y-%m-%d') if m.taken_at else '–' }} · {{ m.path.rsplit('/', 1)[-1] }}</span></span></a></li>
+    {% endfor %}
+  </ul>
+  {% if pages > 1 %}
+  <nav class="pager" aria-label="{{ _('ui_photos_pages') }}">
+    {% set base = '/photos?' ~ ('folder=' ~ (folder|urlencode) ~ '&' if folder is not none else '') %}
+    {% if page > 1 %}<a href="{{ base }}page={{ page - 1 }}">{{ _('ui_prev') }}</a>{% endif %}
+    <span>{{ _('ui_photos_page', page=page, pages=pages) }}</span>
+    {% if page < pages %}<a href="{{ base }}page={{ page + 1 }}">{{ _('ui_next') }}</a>{% endif %}
+  </nav>
+  {% endif %}
+  {% else %}<p class="muted">{{ _('ui_photos_none') }}</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_twofa_setup_h1') }}</h2>
+<section class="card">
+  {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+  <ol>
+    <li>{{ _('ui_twofa_setup_step1') }}
+      <div class="qr" role="img" aria-label="{{ _('ui_twofa_qr_label') }}">{{ qr|safe }}</div>{# security: reviewed - SVG made by qrcode from the key generated here #}
+      <p>{{ _('ui_twofa_setup_key') }}: <code translate="no">{{ key }}</code></p></li>
+    <li>{{ _('ui_twofa_setup_step2') }}
+      <form method="post" action="/security/2fa">
+        <label>{{ _('ui_twofa_code') }} <input type="text" name="code" required autocomplete="one-time-code" inputmode="numeric" maxlength="7" autofocus></label>
+        <button class="primary" type="submit">{{ _('ui_twofa_confirm_btn') }}</button>
+      </form></li>
+  </ol>
+  <p><a href="/security">{{ _('ui_back') }}</a></p>
+</section>
+{% endblock %}

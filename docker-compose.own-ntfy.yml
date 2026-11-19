@@ -1,0 +1,50 @@
+# Back in Frame with your own ntfy server: photos never leave your hardware,
+# and videos up to 50 MB are possible.
+#
+# Requirement: phones must reach ntfy over HTTPS from the internet (or your VPN),
+# e.g. https://ntfy.example.org via your reverse proxy (Caddy, Traefik, NPM...)
+# pointing at port 8082 of this machine.
+
+services:
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: backinframe-ntfy
+    command: serve
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    volumes:
+      - ./ntfy:/var/cache/ntfy
+    environment:
+      TZ: Europe/Amsterdam
+      NTFY_BASE_URL: https://ntfy.example.org          # <- your public URL
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh          # instant push on iPhone (content-free relay)
+      NTFY_BEHIND_PROXY: "true"
+      NTFY_CACHE_FILE: /var/cache/ntfy/cache.db
+      NTFY_ATTACHMENT_CACHE_DIR: /var/cache/ntfy/attachments
+      NTFY_ATTACHMENT_FILE_SIZE_LIMIT: 50M
+      NTFY_ATTACHMENT_TOTAL_SIZE_LIMIT: 2G
+      NTFY_ATTACHMENT_EXPIRY_DURATION: 72h
+      NTFY_VISITOR_REQUEST_LIMIT_EXEMPT_HOSTS: backinframe
+
+  backinframe:
+    image: ghcr.io/backinframe/backinframe:latest
+    build: .
+    container_name: backinframe
+    restart: unless-stopped
+    depends_on: [ntfy]
+    ports:
+      - "8080:8080"
+    read_only: true                # the container only writes to /data and a temporary /tmp
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ./photos:/media:ro
+      - ./data:/data
+    environment:
+      TZ: Europe/Amsterdam
+      BACKINFRAME_LANGUAGE: en
+      BACKINFRAME_NTFY_URL: http://ntfy:80                     # internal route
+      BACKINFRAME_NTFY_PUBLIC_URL: https://ntfy.example.org    # what phones use
+      # BACKINFRAME_ADMIN_PASSWORD: kies-een-wachtwoord

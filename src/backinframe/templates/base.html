@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Back in Frame</title>
+<style>
+  :root { --bg:#faf7f2; --card:#fff; --ink:#2b2622; --muted:#6b6058; --accent:#b04520; --on-accent:#fff; --line:#ece4da; --ok:#2f7d4f; --err:#b3261e; --focus:#3b6fd9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1d1a17; --card:#27231f; --ink:#f1ebe4; --muted:#b3a89d; --line:#3a342e; --accent:#f0956b; --on-accent:#1d1a17; --ok:#6cc08b; --err:#f2847a; --focus:#8fb0f2; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  .wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display:flex; flex-wrap: wrap; align-items:baseline; gap:8px 12px; margin-bottom: 20px; }
+  .brand { margin:0; font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .brand a { color: inherit; text-decoration: none; }
+  header span { color: var(--muted); font-size: 14px; }
+  .admin-nav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: baseline; font-size: 15px; }
+  .thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .thumbs figure { margin: 0; }
+  .thumbs img, .thumbs .vid { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; background: var(--line); }
+  .thumbs .vid { display: grid; place-items: center; color: var(--muted); font-size: 28px; }
+  .thumbs figcaption { font-size: 13px; padding-top: 4px; }
+  table.stats { border-collapse: collapse; width: 100%; font-size: 15px; }
+  table.stats th, table.stats td { text-align: left; padding: 6px 8px; border-top: 1px solid var(--line); }
+  table.stats td.num, table.stats th.num { text-align: right; }
+  ul.thumbs { list-style: none; padding: 0; margin: 0; }
+  .thumblink { display: block; color: inherit; text-decoration: none; }
+  .thumblink:hover .cap strong, .thumblink:focus-visible .cap strong { text-decoration: underline; }
+  .thumblink img, .thumblink .vid { display: grid; place-items: center; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; background: var(--line); color: var(--muted); font-size: 28px; }
+  .thumblink .cap { display: block; font-size: 13px; padding-top: 4px; overflow-wrap: anywhere; }
+  .edited { color: var(--accent); }
+  .photo-form input[type=text] { width: 100%; max-width: 36em; box-sizing: border-box; }
+  .pager { display: flex; gap: 16px; align-items: baseline; margin-top: 14px; }
+  .photo-edit { display: grid; grid-template-columns: minmax(0, 240px) minmax(0, 1fr); gap: 20px; align-items: start; }
+  @media (max-width: 560px) { .photo-edit { grid-template-columns: 1fr; } }
+  .photo-preview img, .photo-preview .vid { display: grid; place-items: center; width: 100%; border-radius: 10px; background: var(--line); }
+  .photo-preview .vid { aspect-ratio: 1 / 1; font-size: 36px; color: var(--muted); }
+  .photo-preview p { font-size: 13px; overflow-wrap: anywhere; }
+  .notif-preview { background: var(--bg, #f4f4f6); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; font-size: 15px; overflow-wrap: anywhere; }
+  .bar { height: 8px; border-radius: 4px; background: var(--accent); min-width: 2px; }
+  button.linklike { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; font: inherit; cursor: pointer; min-height: 24px; }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 18px 20px; margin-bottom: 16px; }
+  h2 { font-size: 18px; margin: 0 0 12px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .row { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type=text], input[type=number], input[type=time], input[type=date], select { font: inherit; padding: 8px 10px; border-radius: 8px; border:1px solid var(--line); background: var(--bg); color: var(--ink); }
+  input[type=number] { width: 90px; }
+  input, select { max-width: 100%; box-sizing: border-box; }
+  button { font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  a.btn { display: inline-block; font: inherit; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+  .skip { position: absolute; left: 8px; top: -60px; background: var(--card); color: var(--ink); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+  .skip:focus { top: 8px; }
+  main:focus { outline: none; }
+  button.danger, .err-text { color: var(--err); }
+  h3 { font-size: 16px; margin: 16px 0 6px; }
+  form.inline { display: inline; }
+  .card p, .card li { overflow-wrap: anywhere; }
+  ul.plain { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+  label { display:block; margin: 8px 0; }
+  ul.list { list-style:none; padding:0; margin:0; }
+  ul.list li { display:flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  ul.list li:first-child { border-top: none; }
+  a { color: var(--accent); }
+  .flash { padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; }
+  .flash.ok { background: color-mix(in srgb, var(--ok) 15%, transparent); }
+  .flash.err { background: color-mix(in srgb, var(--err) 15%, transparent); }
+  .qr { background:#fff; border-radius: 12px; padding: 8px; width: min(220px, 100%); box-sizing: border-box; }
+  .qr svg { width: 100%; height: auto; display:block; }
+  code { background: var(--bg); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+  ol li { margin-bottom: 8px; }
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 32px; }
+</style>
+<script src="/admin.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#content">{{ _('ui_skip') }}</a>
+<div class="wrap">
+  <header><h1 class="brand"><a href="/">Back in Frame</a> <span aria-hidden="true">📷</span></h1>
+    {% if auth and (logged_in or not auth.enabled) %}<nav class="admin-nav" aria-label="{{ _('ui_menu') }}">
+      <a href="/photos">{{ _('ui_photos_nav') }}</a>
+      <a href="/uploads">{{ _('ui_uploads') }}</a>
+      <a href="/admins">{{ _('ui_admins') }}</a>
+      {% if svc.settings.reactions_enabled %}<a href="/hearts">{{ _('ui_hearts') }}</a>{% endif %}
+      {% if svc.settings.year_review_enabled %}<a href="/review">{{ _('ui_review') }}</a>{% endif %}
+      <a href="/security">{{ _('ui_security') }}</a>
+      {% if auth.enabled %}<form method="post" action="/logout" class="inline"><button type="submit" class="linklike">{{ _('ui_logout') }}</button></form>{% endif %}</nav>{% endif %}
+  </header>
+<main id="content" tabindex="-1">
+  {% if msg %}<div class="flash ok" role="status">{{ msg }}</div>{% endif %}
+  {% if err %}<div class="flash err" role="alert">{{ err }}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+  <footer>Back in Frame {{ version }}</footer>
+</div>
+</body>
+</html>

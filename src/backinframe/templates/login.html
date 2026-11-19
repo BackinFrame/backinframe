@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="card" style="max-width:420px">
+  <h2>{{ _('ui_login_h1') }}</h2>
+  {% if error %}<div class="flash err" role="alert">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <input type="hidden" name="next" value="{{ next }}">
+    {% if others %}<label>{{ _('ui_admin_name') }} <input type="text" name="name" value="{{ login_name or '' }}" autocomplete="username" maxlength="60" aria-describedby="name-hint"></label>
+    <p class="muted" id="name-hint">{{ _('ui_admin_name_hint') }}</p>{% endif %}
+    <label>{{ _('ui_password') }} <input type="password" name="password" required autocomplete="current-password" {% if not others %}autofocus{% endif %}></label>
+    <button class="primary" type="submit">{{ _('ui_login_btn') }}</button>
+  </form>
+</section>
+{% endblock %}

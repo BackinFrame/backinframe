@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" data-base="{{ base }}" data-vapid="{{ vapid_key }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#b04520">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Back in Frame">
+<title>Back in Frame</title>
+<link rel="manifest" href="{{ base }}/manifest.webmanifest">
+<link rel="apple-touch-icon" href="{{ base }}/apple-touch-icon.png">
+<link rel="icon" href="{{ base }}/icon.png">
+<style>
+  :root { --bg:#faf7f2; --card:#fff; --ink:#2b2622; --muted:#6b6058; --accent:#b04520; --on-accent:#fff; --line:#ece4da; --focus:#3b6fd9; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1d1a17; --card:#27231f; --ink:#f1ebe4; --muted:#b3a89d; --line:#3a342e; --accent:#f0956b; --on-accent:#1d1a17; --focus:#8fb0f2; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font:16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width: 760px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 16px 48px; }
+  header { display:flex; align-items:center; gap:12px; margin: 8px 0 16px; }
+  header img { width:40px; height:40px; border-radius:10px; }
+  h1 { margin:0; font-size: 24px; letter-spacing:-0.3px; }
+  h2 { font-size: 17px; margin: 0 0 8px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .card { background: var(--card); border:1px solid var(--line); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+  button { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 16px; border-radius: 10px; border:1px solid var(--line); background: var(--bg); color: var(--ink); cursor:pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+  .row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  ol { margin: 8px 0 0; padding-left: 20px; }
+  .gallery { display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  figure { margin:0; background: var(--card); border:1px solid var(--line); border-radius: 12px; overflow:hidden; }
+  figure img, figure video { display:block; width:100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--line); }
+  figure.open img { aspect-ratio: auto; object-fit: contain; }
+  figcaption { padding: 8px 10px; font-size: 13px; }
+  figcaption strong { display:block; font-size: 14px; }
+  figcaption { display:flex; gap:8px; align-items:flex-start; justify-content:space-between; }
+  .heart { flex: 0 0 auto; min-width:44px; min-height:44px; padding: 0; border-radius: 50%; font-size: 22px; line-height: 1;
+           background: transparent; border: 1px solid var(--line); color: var(--muted); }
+  .heart[aria-pressed="true"] { color: #d1344b; border-color: #d1344b; background: color-mix(in srgb, #d1344b 10%, transparent); }
+  footer { color: var(--muted); font-size: 13px; margin-top: 24px; }
+  [hidden] { display:none !important; }
+  .sr { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .guide { --g-phone:#1f1b18; --g-screen:#f2efe9; --g-card:#fff; --g-line:#d9d2c8; --g-ink:#2b2622; --g-muted:#b8aea4;
+           --g-photo:#e3c9b6; --g-hl:#e6eefc; --g-blue:#0a64d6; --g-green:#2fa84f; --g-home:#5b6fa8; }
+  @media (prefers-color-scheme: dark) { .guide { --g-phone:#000; --g-screen:#1c1c1e; --g-card:#2c2c2e; --g-line:#48484a;
+           --g-ink:#f2f2f7; --g-muted:#6e6e73; --g-photo:#5a4a40; --g-hl:#1d3557; --g-blue:#4ea1ff; --g-home:#2c3a63; } }
+  .guide h3 { font-size: 16px; margin: 4px 0 10px; }
+  .guide-body { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; }
+  .guide-picture { margin:0; flex: 0 0 auto; background:none; border:0; border-radius:0; overflow:visible; }
+  .guide-picture svg { display:block; width: 180px; height: auto; }
+  .guide-controls { display:flex; align-items:center; gap:6px; padding: 8px 0 0; font-size: 14px; }
+  .guide-controls button { min-width:44px; padding: 6px 10px; }
+  .guide-steps { flex: 1 1 220px; min-width: 0; }
+  .guide-steps ol { margin: 0 0 8px; padding-left: 22px; }
+  .guide-steps li { margin-bottom: 8px; padding: 4px 6px; border-radius: 8px; }
+  .guide-steps li.current { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .tap { fill: none; stroke: var(--accent); stroke-width: 3; transform-box: fill-box; transform-origin: center; animation: tap 1.3s ease-out infinite; }
+  @keyframes tap { 0% { opacity: 1; transform: scale(.85); } 70% { opacity: .15; transform: scale(1.15); } 100% { opacity: 0; transform: scale(1.2); } }
+  @media (prefers-reduced-motion: reduce) { .tap { animation: none; opacity: 1; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="{{ base }}/icon.png" alt="">
+    <div><h1>Back in Frame</h1><div class="muted">{{ _('app_for', name=name) }}</div></div>
+  </header>
+
+  <section class="card" aria-labelledby="push-title">
+    <h2 id="push-title">{{ _('app_notifications') }}</h2>
+    <p id="push-status" class="muted" role="status">{{ _('app_checking') }}</p>
+    {% include "_ios_guide.html" %}
+    <div class="row">
+      <button id="push-on" class="primary" type="button" hidden>{{ _('app_push_on_button') }}</button>
+      <button id="push-off" type="button" hidden>{{ _('app_push_off_button') }}</button>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="rhythm-title">
+    <h2 id="rhythm-title">{{ _('app_rhythm') }}</h2>
+    <p id="rhythm">{{ rhythm }}</p>
+    <div class="row">
+      <button type="button" data-command="more">{{ _('btn_more') }}</button>
+      <button type="button" data-command="less">{{ _('btn_less') }}</button>
+      <button id="pause" type="button" data-command="pause" {% if paused %}hidden{% endif %}>{{ _('btn_pause') }}</button>
+      <button id="resume" type="button" data-command="resume" {% if not paused %}hidden{% endif %}>{{ _('ui_resume') }}</button>
+    </div>
+    <p id="reply" class="muted" role="status"></p>
+  </section>
+
+  <section aria-labelledby="gallery-title">
+    <h2 id="gallery-title">{{ _('app_received') }}</h2>
+    {% if items and hearts %}<p class="muted">{{ _('app_hearts_note') }}</p>{% endif %}
+    {% if items %}
+    <div class="gallery">
+      {% for it in items %}
+      <figure id="m{{ it.send_id }}">
+        {% if it.kind == 'image' %}
+        <a href="{{ base }}/media/{{ it.send_id }}"><img src="{{ base }}/media/{{ it.send_id }}" alt="{{ it.title }}" loading="lazy"></a>
+        {% else %}
+        <video src="{{ base }}/media/{{ it.send_id }}" controls playsinline preload="none" poster=""></video>
+        {% endif %}
+        <figcaption><span><strong>{{ it.title }}</strong>{{ it.text }}</span>
+          {% if hearts %}<button type="button" class="heart" data-react="{{ it.send_id }}" aria-pressed="{{ 'true' if it.reaction == 'heart' else 'false' }}" aria-label="{{ _('app_heart_label', title=it.title) }}"><span aria-hidden="true">♥</span></button>{% endif %}
+        </figcaption>
+      </figure>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="muted">{{ _('app_empty') }}</p>
+    {% endif %}
+  </section>
+
+  <footer>
+    <p>{{ _('app_privacy') }}</p>
+  </footer>
+</main>
+<script id="texts" type="application/json">{{ texts|tojson }}</script>
+<script src="{{ base }}/app.js"></script>
+</body>
+</html>

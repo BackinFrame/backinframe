@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>{{ _('ui_hearts') }}</h2>
+{% if not svc.settings.reactions_enabled %}
+<section class="card"><p>{{ _('ui_hearts_off') }}</p></section>
+{% elif not app_recipients %}
+<section class="card"><p>{{ _('ui_hearts_no_app') }}</p></section>
+{% else %}
+<section class="card">
+  <p>{{ _('ui_hearts_summary', hearted=overview.hearted, sent=overview.sent, rate=overview.rate) }}</p>
+  <p class="muted">{{ _('ui_hearts_explain') }}</p>
+</section>
+
+<section class="card">
+  <h3>{{ _('ui_hearts_loved') }}</h3>
+  {% if overview.loved %}
+  <div class="thumbs">
+    {% for p in overview.loved %}
+    <figure>
+      {% if p.kind == 'image' %}<img src="/thumb/{{ p.media_id }}" alt="{{ p.album }}" loading="lazy">{% else %}<div class="vid" role="img" aria-label="{{ _('ui_video') }}">▶</div>{% endif %}
+      <figcaption><strong>♥ {{ p.hearts }}</strong> · {{ p.album }}<br><span class="muted">{{ p.names|join(', ') }}</span></figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="muted">{{ _('ui_hearts_none') }}</p>{% endif %}
+</section>
+
+<section class="card">
+  <h3>{{ _('ui_hearts_albums') }}</h3>
+  <table class="stats">
+    <thead><tr><th scope="col">{{ _('ui_album') }}</th><th scope="col" class="num">{{ _('ui_hearts_sent') }}</th><th scope="col" class="num">♥</th><th scope="col" class="num">%</th><th scope="col"><span class="sr">{{ _('ui_hearts_share') }}</span></th></tr></thead>
+    <tbody>
+    {% for a in overview.albums %}
+    <tr><td>{{ a.album }}</td><td class="num">{{ a.sent }}</td><td class="num">{{ a.hearted }}</td><td class="num">{{ a.rate }}</td>
+      <td style="width:30%"><div class="bar" style="width: {{ a.rate }}%" aria-hidden="true"></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h3>{{ _('ui_hearts_people') }}</h3>
+  <table class="stats">
+    <thead><tr><th scope="col">{{ _('ui_recipient') }}</th><th scope="col" class="num">{{ _('ui_hearts_sent') }}</th><th scope="col" class="num">♥</th></tr></thead>
+    <tbody>
+    {% for p in overview.recipients %}<tr><td>{{ p.name }}</td><td class="num">{{ p.sent }}</td><td class="num">{{ p.hearted }}</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="card">
+  <h3>{{ _('ui_hearts_unloved') }}</h3>
+  <p class="muted">{{ _('ui_hearts_unloved_explain') }}</p>
+  {% if overview.unloved %}
+  <div class="thumbs">
+    {% for u in overview.unloved %}
+    <figure>
+      {% if u.kind == 'image' %}<img src="/thumb/{{ u.media_id }}" alt="{{ u.album }}" loading="lazy">{% else %}<div class="vid" role="img" aria-label="{{ _('ui_video') }}">▶</div>{% endif %}
+      <figcaption>{{ u.album }} · {{ _('ui_hearts_times', n=u.sent) }}<br><span class="muted">{{ u.path }}</span></figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+  {% else %}<p class="muted">{{ _('ui_hearts_unloved_none') }}</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}
