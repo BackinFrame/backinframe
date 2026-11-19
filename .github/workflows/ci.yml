@@ -6,6 +6,10 @@ on:
     tags: ["v*"]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
 env:
   NTFY_VERSION: "2.14.0"
 
@@ -20,6 +24,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: System packages
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: ntfy server binary (for end-to-end tests)
@@ -43,6 +49,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - run: pip install -e ".[test,security]"
       - name: Dependencies against known vulnerabilities (pip-audit, OSV/PyPI advisories)
         run: pip-audit --skip-editable --progress-spinner off
@@ -87,38 +95,19 @@ jobs:
           name: zap-report
           path: zap/
 
-  docker:
-    needs: [test, security, zap]
+  image:
+    # Build, smoke test and scan the image (amd64), in parallel with the tests.
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
       - uses: actions/checkout@v4
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v5
-        id: meta
-        with:
-          images: ghcr.io/${{ github.repository }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
-          push: ${{ startsWith(github.ref, 'refs/tags/v') }}
-          tags: ${{ steps.meta.outputs.tags }}
+          load: true
+          tags: backinframe:test
       - name: Smoke test the image
         run: |
-          docker build -t backinframe:test .
           mkdir -p /tmp/photos /tmp/data && chmod 777 /tmp/data
           docker run -d --name lm -p 8080:8080 -v /tmp/photos:/media:ro -v /tmp/data:/data \
             --read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges \
@@ -131,3 +120,35 @@ jobs:
         run: |
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.72.0 \
             image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test
+
+  docker:
+    # Publish (amd64 + arm64): only for a version tag, after every check passed.
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [test, security, zap, image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
