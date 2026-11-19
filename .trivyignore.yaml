@@ -1,0 +1,8 @@
+# Findings we accept for a short time, each with a reason and an end date. After the end date
+# Trivy reports them again and the build fails.
+vulnerabilities:
+  - id: CVE-2026-85091
+    statement: >
+      zlib gz_vacate() (gzFile API). The fixed Debian package is not yet installable from the
+      trixie archives the image uses; apt-get upgrade picks it up as soon as it is.
+    expired_at: 2026-12-03
