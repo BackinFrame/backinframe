@@ -23,3 +23,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    # A newer Python (3.13, 3.14, ...) is a deliberate step: first add it to the CI test matrix.
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]
