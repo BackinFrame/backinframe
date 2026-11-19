@@ -6,7 +6,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     BACKINFRAME_MEDIA_DIR=/media \
     BACKINFRAME_DATA_DIR=/data
 
+# upgrade: pick up Debian security fixes released after the python base image was built
 RUN apt-get update \
+ && apt-get upgrade -y \
  && apt-get install -y --no-install-recommends ffmpeg tzdata \
  && rm -rf /var/lib/apt/lists/*
 

@@ -129,5 +129,5 @@ jobs:
         # The Trivy image at a fixed version, not trivy-action: its tags were rewritten in the
         # March 2026 supply-chain incident (CVE-2026-33634). Pin by digest when you publish.
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.72.0 \
-            image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 \
+            image --skip-version-check --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test
