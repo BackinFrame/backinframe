@@ -26,7 +26,7 @@ tap **More**, **Less** or **Pause 1 week** to set their own rhythm.
 - **Accessible.** Checked automatically against WCAG 2.2 AA: contrast, labels, keyboard use,
   reflow at 320 px, light and dark mode, and *Reduce Motion*.
 - **Self-hosted.** One small Docker container, SQLite, no accounts. MIT licensed.
-- **Private by design.** No telemetry, no AI, no tracking. Back in Frame never reads the location
+- **Private by design.** No telemetry, no AI in the app, no tracking. Back in Frame never reads the location
   from your photos, strips location and other metadata before anything is sent (only the date
   stays), and web app notifications are end-to-end encrypted.
 
@@ -62,6 +62,18 @@ Chinese and Japanese (`BACKINFRAME_LANGUAGE`); each recipient can have their own
 Optional channels need their own service: an SMTP account, a Telegram bot, a
 [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) container, a Matrix bot
 account, or a Discord webhook. See the [admin guide](docs/admin-guide.md#5-e-mail-telegram-signal-matrix-and-discord).
+
+## How it was made
+
+Back in Frame was built with the help of an AI coding assistant (Claude, by Anthropic). Code,
+tests, documentation, the translations and the website texts were drafted with it; a human
+maintainer decides what goes in, reviews it, tests it and publishes it. Every change passes the
+same automated tests and security checks ([docs/security.md](docs/security.md)).
+
+The app itself contains no AI and sends nothing to AI services.
+
+The translations have not all been checked by native speakers yet: corrections are very welcome.
+Found something odd? Open an issue; for security problems see [SECURITY.md](SECURITY.md).
 
 ## License
 

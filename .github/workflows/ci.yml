@@ -16,8 +16,8 @@ jobs:
       matrix:
         python: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: System packages
@@ -37,10 +37,10 @@ jobs:
     # The security tests themselves (pytest -m security) also run in the test job above.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
       - run: pip install -e ".[test,security]"
@@ -61,7 +61,7 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
       - name: Start Back in Frame
         run: |
           docker build -t backinframe:zap .
@@ -81,7 +81,7 @@ jobs:
               ghcr.io/zaproxy/zaproxy:stable zap-baseline.py -t "$target" -c conf/rules.tsv -I \
               -r "out/zap-$name.html" -J "out/zap-$name.json"
           done
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: zap-report
@@ -94,23 +94,23 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: docker/setup-qemu-action@v4
-      - uses: docker/setup-buildx-action@v4
-      - uses: docker/login-action@v4
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/metadata-action@v6
+      - uses: docker/metadata-action@v5
         id: meta
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=semver,pattern={{version}}
             type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') }}
-      - uses: docker/build-push-action@v7
+      - uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -129,5 +129,5 @@ jobs:
         # The Trivy image at a fixed version, not trivy-action: its tags were rewritten in the
         # March 2026 supply-chain incident (CVE-2026-33634). Pin by digest when you publish.
         run: |
-          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 \
-            image --skip-version-check --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.72.0 \
+            image --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 --no-progress backinframe:test
