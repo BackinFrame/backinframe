@@ -2,6 +2,8 @@
 
 **Your best memories, back on your phone.**
 
+https://github.com/user-attachments/assets/bef738e6-7a0f-4fef-885f-2b497709dbf3
+
 [User guide](docs/user-guide.md) · [Admin guide](docs/admin-guide.md) · [How it works](docs/how-it-works.md) · [Development](docs/development.md) · [Security](docs/security.md)
 
 You take hundreds of photos (on trips, at parties, of the children growing up) and then hardly
